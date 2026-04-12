@@ -1,0 +1,19 @@
+# docker-compose.yml
+# Run with: docker-compose up --build
+
+version: '3.8'
+
+services:
+  # Main application: runs pipeline + API + Dashboard + MLflow
+  app:
+    build: .
+    ports:
+      - "8000:8000"   # FastAPI
+      - "8501:8501"   # Streamlit Dashboard
+      - "5000:5000"   # MLflow UI
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    volumes:
+      - ./data:/app/data             # Persist database
+      - ./artifacts:/app/artifacts   # Persist models & metrics
+    restart: unless-stopped

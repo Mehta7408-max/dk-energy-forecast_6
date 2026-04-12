@@ -1,0 +1,56 @@
+# .github/workflows/pipeline.yml
+# Scheduled pipeline: runs daily at 6 AM UTC to fetch new data and retrain
+
+name: Daily Pipeline
+
+on:
+  # Run every day at 06:00 UTC (08:00 Danish time)
+  schedule:
+    - cron: '0 6 * * *'
+
+  # Also allow manual trigger from GitHub UI
+  workflow_dispatch:
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run data ingestion
+        run: python -c "from src.data_ingestion import run_ingestion; run_ingestion(days_back=7)"
+
+      - name: Train model
+        run: python -c "from src.train_model import train_model; train_model()"
+
+      - name: Run drift detection
+        run: python -c "from src.monitor import check_data_drift; check_data_drift()"
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-artifacts-${{ github.run_number }}
+          path: |
+            artifacts/latest_metrics.json
+            artifacts/feature_importance.json
+            artifacts/latest_drift_report.json
+          retention-days: 30
