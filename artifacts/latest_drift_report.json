@@ -1,0 +1,98 @@
+{
+  "checked_at": "2026-04-14T20:42:52.991482",
+  "total_features": 18,
+  "features_with_drift": 17,
+  "drift_detected": true,
+  "details": {
+    "hour": {
+      "ks_statistic": 0.0074,
+      "p_value": 1.0,
+      "drift_detected": false
+    },
+    "day_of_week": {
+      "ks_statistic": 0.0559,
+      "p_value": 0.0004,
+      "drift_detected": true
+    },
+    "month": {
+      "ks_statistic": 0.7888,
+      "p_value": 0.0,
+      "drift_detected": true
+    },
+    "is_weekend": {
+      "ks_statistic": 0.0405,
+      "p_value": 0.0217,
+      "drift_detected": true
+    },
+    "price_lag_1h": {
+      "ks_statistic": 0.2317,
+      "p_value": 0.0,
+      "drift_detected": true
+    },
+    "price_lag_2h": {
+      "ks_statistic": 0.2317,
+      "p_value": 0.0,
+      "drift_detected": true
+    },
+    "price_lag_24h": {
+      "ks_statistic": 0.2317,
+      "p_value": 0.0,
+      "drift_detected": true
+    },
+    "price_lag_48h": {
+      "ks_statistic": 0.2317,
+      "p_value": 0.0,
+      "drift_detected": true
+    },
+    "price_lag_168h": {
+      "ks_statistic": 0.2536,
+      "p_value": 0.0,
+      "drift_detected": true
+    },
+    "price_rolling_6h_mean": {
+      "ks_statistic": 0.2368,
+      "p_value": 0.0,
+      "drift_detected": true
+    },
+    "price_rolling_12h_mean": {
+      "ks_statistic": 0.2446,
+      "p_value": 0.0,
+      "drift_detected": true
+    },
+    "price_rolling_24h_mean": {
+      "ks_statistic": 0.2421,
+      "p_value": 0.0,
+      "drift_detected": true
+    },
+    "price_rolling_6h_std": {
+      "ks_statistic": 0.0899,
+      "p_value": 0.0,
+      "drift_detected": true
+    },
+    "price_rolling_24h_std": {
+      "ks_statistic": 0.2105,
+      "p_value": 0.0,
+      "drift_detected": true
+    },
+    "temperature_c": {
+      "ks_statistic": 0.5264,
+      "p_value": 0.0,
+      "drift_detected": true
+    },
+    "wind_speed_ms": {
+      "ks_statistic": 0.0607,
+      "p_value": 0.0001,
+      "drift_detected": true
+    },
+    "cloud_cover_pct": {
+      "ks_statistic": 0.3015,
+      "p_value": 0.0,
+      "drift_detected": true
+    },
+    "humidity_pct": {
+      "ks_statistic": 0.2636,
+      "p_value": 0.0,
+      "drift_detected": true
+    }
+  }
+}
