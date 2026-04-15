@@ -1,14 +1,8 @@
-# .github/workflows/pipeline.yml
-# Scheduled pipeline: runs daily at 6 AM UTC to fetch new data and retrain
-
 name: Daily Pipeline
 
 on:
-  # Run every day at 06:00 UTC (08:00 Danish time)
   schedule:
     - cron: '0 6 * * *'
-
-  # Also allow manual trigger from GitHub UI
   workflow_dispatch:
 
 jobs:
@@ -18,17 +12,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Cache pip packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
 
       - name: Install dependencies
         run: pip install -r requirements.txt
