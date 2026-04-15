@@ -25,12 +25,29 @@ from src.config import ARTIFACTS_DIR, DEFAULT_ZONE
 # Auto-run pipeline if database doesn't exist yet (first deploy)
 from src.config import DB_PATH
 if not DB_PATH.exists():
+    import pickle, json
+    import numpy as np
+    from datetime import datetime
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+    from xgboost import XGBRegressor
     from src.database import init_database
     from src.data_ingestion import run_ingestion
-    from src.train_model import train_model
+    from src.feature_engineering import prepare_training_data, get_feature_columns
+    from src.config import MODEL_PARAMS, TEST_SIZE, ARTIFACTS_DIR
     init_database()
     run_ingestion()
-    train_model()
+    X, y, _ = prepare_training_data()
+    if X is not None:
+        X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=TEST_SIZE, shuffle=False)
+        mdl = XGBRegressor(**MODEL_PARAMS)
+        mdl.fit(X_tr, y_tr, eval_set=[(X_te, y_te)], verbose=False)
+        y_p = mdl.predict(X_te)
+        met = {"mae": float(mean_absolute_error(y_te, y_p)), "rmse": float(np.sqrt(mean_squared_error(y_te, y_p))), "r2_score": float(r2_score(y_te, y_p)), "model_version": datetime.now().strftime("%Y%m%d_%H%M%S"), "trained_at": datetime.now().isoformat(), "training_rows": len(X_tr), "price_zone": "DK1"}
+        with open(ARTIFACTS_DIR / "latest_model.pkl", "wb") as f: pickle.dump(mdl, f)
+        with open(ARTIFACTS_DIR / "latest_metrics.json", "w") as f: json.dump(met, f, indent=2)
+        imp = dict(zip(get_feature_columns(), mdl.feature_importances_.tolist()))
+        with open(ARTIFACTS_DIR / "feature_importance.json", "w") as f: json.dump(imp, f, indent=2)
 
 # ── Page Config ────────────────────────────────────────────────────
 st.set_page_config(
