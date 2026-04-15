@@ -103,7 +103,7 @@ def train_model(price_zone: str = DEFAULT_ZONE):
         ))
 
         # Log the model
-        mlflow.sklearn.log_model(model, "model")
+        #mlflow.sklearn.log_model(model, "model")
 
         print(f"  📈 Metrics:")
         print(f"     MAE:  {metrics['mae']:.4f} DKK/kWh")
