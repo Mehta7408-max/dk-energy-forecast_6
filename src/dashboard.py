@@ -22,7 +22,15 @@ from src.llm_analysis import generate_analysis, calculate_savings
 from src.monitor import check_data_drift, check_data_freshness
 from src.database import run_query
 from src.config import ARTIFACTS_DIR, DEFAULT_ZONE
-
+# Auto-run pipeline if database doesn't exist yet (first deploy)
+from src.config import DB_PATH
+if not DB_PATH.exists():
+    from src.database import init_database
+    from src.data_ingestion import run_ingestion
+    from src.train_model import train_model
+    init_database()
+    run_ingestion()
+    train_model()
 
 # ── Page Config ────────────────────────────────────────────────────
 st.set_page_config(
