@@ -92,7 +92,7 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
 pip install -r requirements.txt
 ```
-
+> **Codespaces users:** Use the forwarded URLs from the Ports tab instead of localhost. Add `/docs` to the port 8000 URL for API documentation.
 ### 2) Configure environment
 
 ```bash
