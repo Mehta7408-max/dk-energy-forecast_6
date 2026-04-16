@@ -1,6 +1,15 @@
 # 🇩🇰 Danish Electricity Price Forecast (MLOps)
 
 Forecast next-day hourly electricity prices for Denmark (DK1/DK2), surface cheapest usage windows, and estimate household savings with optional LLM-generated guidance.
+## Live demo
+https://dk-electricity-price-forecast-mlops.streamlit.app
+
+## Model performance
+| Metric | Value |
+|--------|-------|
+| MAE | 0.0475 DKK/kWh |
+| RMSE | 0.0740 DKK/kWh |
+| R² | 0.9689 |
 
 ## What this repository includes
 
