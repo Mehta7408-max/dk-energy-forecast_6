@@ -169,3 +169,8 @@ pytest tests/ -v
 ## License
 
 MIT — see [LICENSE](LICENSE)
+
+👤 Author
+Subhash Kumar Mehta
+MSc Business Data Science, Aalborg University
+MLOps Exam Project — April 2026
