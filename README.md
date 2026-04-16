@@ -1,185 +1,171 @@
-# 🇩🇰 Danish Electricity Price Forecaster
+# 🇩🇰 Danish Electricity Price Forecast (MLOps)
 
-**Research Question:** *To what extent can a lightweight, automated MLOps pipeline using publicly available energy data accurately forecast Danish spot electricity prices, and how much could a typical household save by shifting flexible consumption to predicted low-price hours?*
+Forecast next-day hourly electricity prices for Denmark (DK1/DK2), surface cheapest usage windows, and estimate household savings with optional LLM-generated guidance.
+## Live demo
+https://dk-electricity-price-forecast-mlops.streamlit.app
 
-## What This Project Does
+## Model performance
+| Metric | Value |
+|--------|-------|
+| MAE | 0.0475 DKK/kWh |
+| RMSE | 0.0740 DKK/kWh |
+| R² | 0.9689 |
 
-This system predicts tomorrow's hourly electricity prices for Denmark (DK1/DK2 price zones), then uses a Groq LLM to generate plain-language savings advice. A Streamlit dashboard shows predictions, recommended cheap hours, and estimated savings.
+## What this repository includes
+
+- **Data ingestion** from:
+  - [Energy-Charts API](https://api.energy-charts.info/) for spot prices
+  - [Open-Meteo](https://open-meteo.com/) for weather features
+- **Feature engineering** with lag, rolling, and calendar signals
+- **Model training** using XGBoost + MLflow tracking
+- **Prediction service** via FastAPI
+- **Interactive dashboard** via Streamlit
+- **Monitoring** for data drift and data freshness
+- **CI pipeline** (GitHub Actions) for scheduled runs
 
 ## Architecture
 
-```
-┌─────────────┐     ┌──────────────┐     ┌───────────────┐
-│ Energi Data  │────▶│  Data        │────▶│  SQLite       │
-│ Service API  │     │  Ingestion   │     │  Database     │
-└─────────────┘     └──────────────┘     └───────┬───────┘
-                                                  │
-┌─────────────┐     ┌──────────────┐              │
-│ OpenMeteo    │────▶│  Weather     │──────────────┘
-│ Weather API  │     │  Ingestion   │
-└─────────────┘     └──────────────┘
-                                                  │
-                    ┌──────────────┐     ┌─────────▼───────┐
-                    │  MLflow      │◀────│  Feature Eng.   │
-                    │  Tracking    │     │  & Training     │
-                    └──────────────┘     └─────────┬───────┘
-                                                  │
-                    ┌──────────────┐     ┌─────────▼───────┐
-                    │  Groq LLM    │◀────│  FastAPI        │
-                    │  Analysis    │     │  Server         │
-                    └──────────────┘     └─────────┬───────┘
-                                                  │
-                                        ┌─────────▼───────┐
-                                        │  Streamlit      │
-                                        │  Dashboard      │
-                                        └─────────────────┘
+```text
+Energy-Charts + Open-Meteo
+            ↓
+      SQLite data store
+            ↓
+   Feature engineering
+            ↓
+     XGBoost training
+            ↓
+   Artifacts + MLflow logs
+            ↓
+ FastAPI endpoints + Streamlit UI
+            ↓
+   Drift/freshness monitoring
 ```
 
-## Tech Stack
+## Tech stack
 
-| Component         | Tool                          | Cost   |
-|-------------------|-------------------------------|--------|
-| Data Source        | Energy-Charts API (Fraunhofer)| Free   |
-| Weather Data       | Open-Meteo API               | Free   |
-| Database           | SQLite                       | Free   |
-| ML Framework       | scikit-learn + XGBoost       | Free   |
-| Experiment Tracking| MLflow                       | Free   |
-| LLM Analysis       | Groq (Llama 3)              | Free   |
-| API Server         | FastAPI                      | Free   |
-| Dashboard          | Streamlit                    | Free   |
-| Containerization   | Docker + Docker Compose      | Free   |
-| CI/CD              | GitHub Actions               | Free   |
+- Python 3.11+
+- pandas, numpy, scikit-learn, xgboost
+- FastAPI, Uvicorn
+- Streamlit, Plotly
+- MLflow
+- SQLite
+- Groq API (optional LLM analysis)
+- Docker / Docker Compose
 
-## Quick Start (Step by Step for Beginners)
+## Repository structure
 
-### Prerequisites
-- Python 3.10+ installed
-- Docker installed (for containerized run)
-- A free Groq API key from https://console.groq.com
+```text
+dk-electricity-price-forecast-mlops/
+├── README.md
+├── requirements.txt
+├── Dockerfile
+├── docker-compose.yml
+├── .env.example
+├── src/
+│   ├── api.py
+│   ├── config.py
+│   ├── dashboard.py
+│   ├── data_ingestion.py
+│   ├── database.py
+│   ├── feature_engineering.py
+│   ├── llm_analysis.py
+│   ├── monitor.py
+│   ├── predict.py
+│   ├── run_pipeline.py
+│   └── train_model.py
+├── tests/
+│   └── test_pipeline.py
+├── artifacts/                # generated model/metrics outputs
+└── data/                     # generated SQLite DB (created on run)
+```
 
-### Option 1: Run Locally (Recommended for First Time)
+## Quick start (local)
+
+### 1) Clone and install
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/dk-energy-forecast.git
-cd dk-energy-forecast
+git clone https://github.com/Mehta7408-max/dk-electricity-price-forecast-mlops.git
+cd dk-electricity-price-forecast-mlops
 
-# 2. Create a virtual environment
-python -m venv venv
-source venv/bin/activate        # Mac/Linux
-# venv\Scripts\activate          # Windows
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
-# 3. Install dependencies
 pip install -r requirements.txt
+```
 
-# 4. Set your Groq API key
-export GROQ_API_KEY="your-groq-api-key-here"    # Mac/Linux
-# set GROQ_API_KEY=your-groq-api-key-here        # Windows
+### 2) Configure environment
 
-# 5. Run the full pipeline (ingest data → train model → start everything)
+```bash
+cp .env.example .env
+# edit .env and set GROQ_API_KEY=...
+```
+
+> If `GROQ_API_KEY` is missing, the app still works and falls back to non-LLM analysis.
+
+### 3) Run full pipeline
+
+```bash
 python src/run_pipeline.py
-
-# 6. Open the dashboard
-# The script will print URLs. Open http://localhost:8501 in your browser.
 ```
 
-### Option 2: Run with Docker
+This initializes DB, ingests data, trains model, predicts, and runs drift checks.
+
+### 4) Start services
+
+In separate terminals:
 
 ```bash
-# 1. Clone and enter the project
-git clone https://github.com/YOUR_USERNAME/dk-energy-forecast.git
-cd dk-energy-forecast
-
-# 2. Create a .env file with your Groq API key
-echo "GROQ_API_KEY=your-groq-api-key-here" > .env
-
-# 3. Build and run
-docker-compose up --build
-
-# 4. Open http://localhost:8501 for the dashboard
-#    Open http://localhost:8000/docs for the API docs
-#    Open http://localhost:5000 for MLflow UI
-```
-
-### Step-by-Step: What Happens When You Run the Pipeline
-
-1. **Data Ingestion** → Pulls 90 days of historical electricity prices from Energi Data Service API and weather data from Open-Meteo. Stores everything in SQLite.
-2. **Feature Engineering** → Creates features: hour, day of week, month, price lags, rolling averages, wind speed, temperature.
-3. **Model Training** → Trains an XGBoost model. Logs metrics (MAE, RMSE, R²) and the model to MLflow.
-4. **API Server** → Starts a FastAPI server that serves predictions and LLM-powered analysis.
-5. **Dashboard** → Streamlit dashboard displays predictions, cheap hours, and savings estimates.
-
-### How to Test Each Component
-
-```bash
-# Test data ingestion only
-python src/data_ingestion.py
-
-# Test feature engineering only
-python src/feature_engineering.py
-
-# Test model training only
-python src/train_model.py
-
-# Run the API server only
 uvicorn src.api:app --host 0.0.0.0 --port 8000
-
-# Run the dashboard only (needs API running)
 streamlit run src/dashboard.py
+mlflow ui --backend-store-uri sqlite:///artifacts/mlflow.db --port 5000
+```
 
-# Run all tests
+Open:
+- Dashboard: http://localhost:8501
+- API docs: http://localhost:8000/docs
+- MLflow UI: http://localhost:5000
+
+## Docker run
+
+```bash
+cp .env.example .env
+# set GROQ_API_KEY in .env
+
+docker-compose up --build
+```
+
+Exposed ports:
+- `8000` FastAPI
+- `8501` Streamlit
+- `5000` MLflow
+
+## API endpoints
+
+- `GET /health` — service + model status
+- `GET /predict?zone=DK1|DK2` — next-day hourly predictions + cheapest hours
+- `GET /analysis?zone=DK1|DK2` — LLM/fallback savings analysis
+- `GET /metrics` — latest model metrics + feature importance
+- `GET /monitor/drift` — data drift report
+- `GET /monitor/freshness` — latest ingestion timestamps
+- `GET /monitor/history` — recent model performance history
+- `POST /retrain?zone=DK1|DK2` — background re-ingest + retrain
+
+## Testing
+
+```bash
 pytest tests/ -v
 ```
 
-## Project Structure
+## CI/CD
 
-```
-dk-energy-forecast/
-├── README.md                    # This file
-├── requirements.txt             # Python dependencies
-├── Dockerfile                   # Container setup
-├── docker-compose.yml           # Multi-container orchestration
-├── .env.example                 # Example environment variables
-├── .github/
-│   └── workflows/
-│       └── pipeline.yml         # GitHub Actions daily pipeline
-├── src/
-│   ├── config.py               # All configuration in one place
-│   ├── database.py             # Database setup and helpers
-│   ├── data_ingestion.py       # Pull data from APIs
-│   ├── feature_engineering.py  # Create ML features
-│   ├── train_model.py          # Train and version models
-│   ├── predict.py              # Generate predictions
-│   ├── monitor.py              # Data drift & model monitoring
-│   ├── llm_analysis.py         # Groq LLM integration
-│   ├── api.py                  # FastAPI endpoints
-│   ├── dashboard.py            # Streamlit frontend
-│   └── run_pipeline.py         # One-click pipeline runner
-├── tests/
-│   └── test_pipeline.py        # Pipeline tests
-├── artifacts/                   # MLflow artifacts stored here
-└── data/
-    └── energy.db               # SQLite database (created on run)
-```
-
-## API Endpoints
-
-| Endpoint              | Method | Description                        |
-|-----------------------|--------|------------------------------------|
-| `/health`             | GET    | Health check                       |
-| `/predict`            | GET    | Get next-day price predictions     |
-| `/analysis`           | GET    | Get LLM-powered savings analysis   |
-| `/metrics`            | GET    | Get model performance metrics      |
-| `/monitor/drift`      | GET    | Check for data drift               |
-| `/retrain`            | POST   | Trigger model retraining           |
-
-## Monitoring & Drift Detection
-
-The system monitors:
-- **Data drift**: Compares recent feature distributions against training data using statistical tests
-- **Model performance**: Tracks prediction error over time
-- **Data freshness**: Alerts if data ingestion has gaps
+`.github/workflows/pipeline.yml` runs daily (cron) and on manual dispatch:
+1. Install dependencies
+2. Ingest recent data
+3. Train model
+4. Run drift checks
+5. Run tests
+6. Upload artifacts
 
 ## License
 
-MIT License - see LICENSE file.
+MIT — see [LICENSE](LICENSE)
