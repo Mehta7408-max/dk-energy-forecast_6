@@ -115,10 +115,9 @@ This initializes DB, ingests data, trains model, predicts, and runs drift checks
 In separate terminals:
 
 ```bash
-uvicorn src.api:app --host 0.0.0.0 --port 8000
-streamlit run src/dashboard.py
-mlflow ui --backend-store-uri sqlite:///artifacts/mlflow.db --port 5000
-```
+python -m uvicorn src.api:app --host 0.0.0.0 --port 8000
+python -m streamlit run src/dashboard.py
+python -m mlflow ui --backend-store-uri sqlite:///artifacts/mlflow.db --host 0.0.0.0 --port 5000
 
 Open:
 - Dashboard: http://localhost:8501
